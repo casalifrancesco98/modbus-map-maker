@@ -1,3 +1,5 @@
+[![CI](https://github.com/FrancescoCasali/modbus-map-maker/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/FrancescoCasali/modbus-map-maker/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/FrancescoCasali/modbus-map-maker/branch/main/graph/badge.svg)](https://codecov.io/gh/FrancescoCasali/modbus-map-maker)
 # modbus-map-maker
 
 CLI & library to **convert Modbus register maps** from CSV/Excel into **validated JSON/YAML** and emit **code stubs** (Python, C) and **PLC-style DEF lines**.
@@ -26,10 +28,33 @@ Usage: modbus-map-maker [OPTIONS] COMMAND [ARGS]...
 
 Commands:
   generate      From CSV/Excel to all outputs (JSON/YAML + code).
+  templates     Manage reusable Excel templates.
   validate      Validate a CSV/Excel mapping file.
   to-json       Convert CSV/Excel to JSON spec.
   to-yaml       Convert CSV/Excel to YAML spec.
   emit-code     Emit code from a JSON/YAML spec.
+```
+
+### Template management
+
+You can store Excel workbooks as reusable templates and reopen them later for
+editing:
+
+```bash
+# Save an Excel workbook as a template
+modbus-map-maker templates upload ./mapping.xlsx --name "Base Plant"
+
+# List the stored templates and their filesystem paths
+modbus-map-maker templates list
+
+# Copy a template into the workspace for customization
+modbus-map-maker templates copy base-plant ./workspace/base-plant.xlsx --open
+
+# Open a template in the default spreadsheet editor
+modbus-map-maker templates edit base-plant
+
+# Print the template path for use in other tooling
+modbus-map-maker templates path base-plant
 ```
 
 ### CSV/Excel expected columns
