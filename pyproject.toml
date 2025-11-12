@@ -1,6 +1,6 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "modbus-map-maker"
@@ -9,40 +9,29 @@ description = "Generate Modbus mapping from CSV/Excel to JSON/YAML and code emit
 readme = "README.md"
 requires-python = ">=3.9"
 license = {text = "MIT"}
-authors = [{name="Francesco Casali", email="francesco.casali.98@gmail.com"}]
+authors = [{name="Francesco Casali", email="example@example.com"}]
 keywords = ["modbus", "mapping", "industrial", "iot", "automation", "energy"]
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
 ]
 
 dependencies = [
-    "pandas>=2.1",
-    "pydantic>=2.6",
-    "typer>=0.12",
-    "jinja2>=3.1",
-    "pyyaml>=6.0",
-    "openpyxl>=3.1"
+  "pandas>=2.1",
+  "pydantic>=2.6",
+  "typer>=0.12",
+  "jinja2>=3.1",
+  "pyyaml>=6.0",
+  "openpyxl>=3.1"
 ]
 
 [project.scripts]
 modbus-map-maker = "modbus_map_maker.cli:app"
 
-# DICHIARA IL PACKAGE per hatchling (QUI STA LA FIX)
-[tool.hatch.build.targets.wheel]
-packages = ["src/modbus_map_maker"]
+[tool.setuptools]
+package-dir = {"" = "src"}
 
-[tool.hatch.build.targets.sdist]
-include = [
-  "src/modbus_map_maker",
-  "examples",
-  "README.md",
-  "LICENSE",
-  "pyproject.toml",
-  "tests",
-]
-
-# (facoltativo) teniamo comunque un include generico
-[tool.hatch.build]
-include = ["src/modbus_map_maker/**", "examples/**", "README.md", "LICENSE"]
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["modbus_map_maker*"]
