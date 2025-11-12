@@ -25,4 +25,6 @@ jobs:
           pip install pytest
 
       - name: Run tests
+        env:
+          PYTHONPATH: src   # cintura e bretelle
         run: pytest -q

@@ -29,5 +29,20 @@ dependencies = [
 [project.scripts]
 modbus-map-maker = "modbus_map_maker.cli:app"
 
+# DICHIARA IL PACKAGE per hatchling (QUI STA LA FIX)
+[tool.hatch.build.targets.wheel]
+packages = [{ include = "modbus_map_maker", from = "src" }]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "src/modbus_map_maker",
+  "examples",
+  "README.md",
+  "LICENSE",
+  "pyproject.toml",
+  "tests",
+]
+
+# (facoltativo) teniamo comunque un include generico
 [tool.hatch.build]
 include = ["src/modbus_map_maker/**", "examples/**", "README.md", "LICENSE"]
