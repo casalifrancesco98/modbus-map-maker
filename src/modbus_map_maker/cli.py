@@ -1,14 +1,14 @@
 from __future__ import annotations
-import typer, json, yaml
+
+import json
 from pathlib import Path
+
+import typer
+import yaml
+
 from .excel import load_mapping
-from .emitters import write_json, write_yaml, emit_python, emit_c_header, emit_defs
-from .template_store import (
-    store_template,
-    list_templates,
-    find_template,
-    clone_template,
-)
+from .emitters import emit_c_header, emit_defs, emit_python, write_json, write_yaml
+from .template_store import clone_template, find_template, list_templates, store_template
 
 app = typer.Typer(help="Modbus Map Maker — from CSV/Excel to JSON/YAML + code emitters")
 templates_app = typer.Typer(help="Manage reusable Excel templates.")
@@ -22,11 +22,16 @@ def _get_template(name: str):
 
 
 @templates_app.command("upload")
-def templates_upload(path: str, name: str = typer.Option(None, help="Optional name for the stored template.")):
+def templates_upload(
+    path: str,
+    name: str = typer.Option(None, help="Optional display name for the stored template."),
+):
     """Store an Excel workbook so it can be reused as a template."""
 
     info = store_template(Path(path), name=name)
-    typer.echo(f"Stored template '{info.name}' at {info.path}")
+    typer.echo(
+        f"Stored template '{info.display_name}' (slug: {info.slug}) at {info.path}"
+    )
 
 
 @templates_app.command("list")
@@ -38,7 +43,7 @@ def templates_list():
         typer.echo("No templates stored yet.")
         return
     for info in templates:
-        typer.echo(f"{info.name}: {info.path}")
+        typer.echo(f"{info.slug}\t{info.display_name}\t{info.path}")
 
 
 @templates_app.command("edit")
@@ -46,7 +51,7 @@ def templates_edit(name: str):
     """Open a stored template in the default application for editing."""
 
     info = _get_template(name)
-    typer.echo(f"Opening template '{info.name}' located at {info.path}")
+    typer.echo(f"Opening template '{info.display_name}' located at {info.path}")
     typer.launch(str(info.path))
 
 
@@ -71,12 +76,16 @@ def templates_copy(
 ):
     """Copy a stored template to a new location for customization."""
 
+    info = _get_template(name)
+
     try:
-        target = clone_template(name, Path(destination), overwrite=overwrite)
+        target = clone_template(info.slug, Path(destination), overwrite=overwrite)
     except FileExistsError as exc:
         raise typer.BadParameter(str(exc)) from exc
 
-    typer.echo(f"Copied template '{name}' to {target}")
+    typer.echo(
+        f"Copied template '{info.display_name}' (slug: {info.slug}) to {target}"
+    )
 
     if open_after:
         typer.launch(str(target))

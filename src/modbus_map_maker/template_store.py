@@ -9,11 +9,12 @@ users) via the ``MODBUS_MAP_MAKER_TEMPLATE_DIR`` environment variable.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 import os
 import re
 import shutil
 from pathlib import Path
-from typing import Iterable, List, Optional
+from typing import Dict, Iterable, List, Optional
 
 ENV_TEMPLATE_DIR = "MODBUS_MAP_MAKER_TEMPLATE_DIR"
 _DEFAULT_DIRNAME = ".modbus_map_maker"
@@ -23,7 +24,8 @@ _DEFAULT_DIRNAME = ".modbus_map_maker"
 class TemplateInfo:
     """Metadata describing a stored template."""
 
-    name: str
+    slug: str
+    display_name: str
     path: Path
 
 
@@ -62,6 +64,35 @@ def _unique_path(directory: Path, slug: str, suffix: str) -> Path:
         index += 1
 
 
+def _metadata_path(directory: Path) -> Path:
+    return directory / "templates.json"
+
+
+def _load_metadata(directory: Path) -> Dict[str, Dict[str, str]]:
+    path = _metadata_path(directory)
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+    if not isinstance(data, dict):
+        return {}
+    return {
+        str(slug): {
+            "display_name": str(meta.get("display_name", slug)),
+            "filename": str(meta.get("filename", "")),
+        }
+        for slug, meta in data.items()
+        if isinstance(meta, dict)
+    }
+
+
+def _save_metadata(directory: Path, metadata: Dict[str, Dict[str, str]]) -> None:
+    path = _metadata_path(directory)
+    path.write_text(json.dumps(metadata, indent=2, sort_keys=True), encoding="utf-8")
+
+
 def store_template(source: Path, name: Optional[str] = None) -> TemplateInfo:
     """Copy an Excel file into the template storage directory.
 
@@ -80,32 +111,80 @@ def store_template(source: Path, name: Optional[str] = None) -> TemplateInfo:
     if suffix not in {".xlsx", ".xls"}:
         raise ValueError("Only .xlsx or .xls files can be stored as templates")
 
-    slug = _slugify(name or source.stem)
+    display_name = name or source.stem
+    slug = _slugify(display_name)
     directory = _template_root()
     destination = _unique_path(directory, slug, suffix)
     shutil.copy2(source, destination)
-    return TemplateInfo(name=destination.stem, path=destination)
+
+    metadata = _load_metadata(directory)
+    metadata[destination.stem] = {
+        "display_name": display_name,
+        "filename": destination.name,
+    }
+    _save_metadata(directory, metadata)
+
+    return TemplateInfo(slug=destination.stem, display_name=display_name, path=destination)
 
 
 def list_templates() -> List[TemplateInfo]:
     """Return all stored templates sorted alphabetically."""
 
     directory = _template_root()
+    metadata = _load_metadata(directory)
     templates: List[TemplateInfo] = []
+
+    for slug, meta in metadata.items():
+        filename = meta.get("filename")
+        if not filename:
+            continue
+        path = directory / filename
+        if not path.exists() or path.suffix.lower() not in {".xlsx", ".xls"}:
+            continue
+        templates.append(
+            TemplateInfo(
+                slug=slug,
+                display_name=meta.get("display_name", slug),
+                path=path,
+            )
+        )
+
+    # Include any orphaned files so the user can recover them even if metadata
+    # was tampered with.
+    known_slugs = {info.slug for info in templates}
     for file in directory.iterdir():
-        if file.is_file() and file.suffix.lower() in {".xlsx", ".xls"}:
-            templates.append(TemplateInfo(name=file.stem, path=file))
-    return sorted(templates, key=lambda info: info.name.lower())
+        if not file.is_file() or file.suffix.lower() not in {".xlsx", ".xls"}:
+            continue
+        slug = file.stem
+        if slug in known_slugs:
+            continue
+        templates.append(TemplateInfo(slug=slug, display_name=slug, path=file))
+
+    return sorted(templates, key=lambda info: info.display_name.lower())
 
 
 def find_template(name: str) -> TemplateInfo:
     """Retrieve metadata for a stored template by its slug name."""
 
     directory = _template_root()
+    metadata = _load_metadata(directory)
+    meta = metadata.get(name)
+    if meta:
+        filename = meta.get("filename")
+        if filename:
+            path = directory / filename
+            if path.exists() and path.suffix.lower() in {".xlsx", ".xls"}:
+                return TemplateInfo(
+                    slug=name,
+                    display_name=meta.get("display_name", name),
+                    path=path,
+                )
+
     matches: Iterable[Path] = directory.glob(f"{name}.*")
     for file in matches:
         if file.is_file() and file.suffix.lower() in {".xlsx", ".xls"}:
-            return TemplateInfo(name=file.stem, path=file)
+            display_name = meta.get("display_name") if meta else name
+            return TemplateInfo(slug=file.stem, display_name=display_name or file.stem, path=file)
     raise FileNotFoundError(f"Template '{name}' was not found")
 
 
@@ -114,6 +193,12 @@ def remove_template(name: str) -> None:
 
     info = find_template(name)
     info.path.unlink(missing_ok=True)
+
+    directory = _template_root()
+    metadata = _load_metadata(directory)
+    if info.slug in metadata:
+        metadata.pop(info.slug, None)
+        _save_metadata(directory, metadata)
 
 
 def clone_template(

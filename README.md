@@ -41,11 +41,13 @@ You can store Excel workbooks as reusable templates and reopen them later for
 editing:
 
 ```bash
-# Save an Excel workbook as a template
+# Save an Excel workbook as a template (name is used for display purposes)
 modbus-map-maker templates upload ./mapping.xlsx --name "Base Plant"
 
 # List the stored templates and their filesystem paths
 modbus-map-maker templates list
+# slug\tdisplay name\tfull path
+# base-plant\tBase Plant\t/home/me/.modbus_map_maker/templates/base-plant.xlsx
 
 # Copy a template into the workspace for customization
 modbus-map-maker templates copy base-plant ./workspace/base-plant.xlsx --open

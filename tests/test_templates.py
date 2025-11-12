@@ -32,16 +32,19 @@ def test_store_and_find_template(tmp_path, monkeypatch):
 
     info = store_template(source, name="Production Map")
     assert info.path.exists()
-    assert info.name.startswith("production-map")
+    assert info.slug.startswith("production-map")
+    assert info.display_name == "Production Map"
 
     templates = list_templates()
     assert len(templates) == 1
     listed = templates[0]
-    assert listed.name == info.name
+    assert listed.slug == info.slug
+    assert listed.display_name == "Production Map"
     assert listed.path == info.path
 
-    fetched = find_template(info.name)
+    fetched = find_template(info.slug)
     assert fetched.path == info.path
+    assert fetched.display_name == "Production Map"
 
 
 def test_clone_template(tmp_path, monkeypatch):
@@ -54,7 +57,7 @@ def test_clone_template(tmp_path, monkeypatch):
     info = store_template(source)
 
     destination_dir = tmp_path / "workspace"
-    cloned_path = clone_template(info.name, destination_dir)
+    cloned_path = clone_template(info.slug, destination_dir)
 
     assert cloned_path.exists()
     assert cloned_path.parent == destination_dir
@@ -63,12 +66,12 @@ def test_clone_template(tmp_path, monkeypatch):
 
     # cloning without overwrite should fail when file exists
     try:
-        clone_template(info.name, cloned_path)
+        clone_template(info.slug, cloned_path)
     except FileExistsError:
         pass
     else:
         raise AssertionError("Expected FileExistsError when destination exists")
 
     # overwriting should succeed
-    overwritten = clone_template(info.name, cloned_path, overwrite=True)
+    overwritten = clone_template(info.slug, cloned_path, overwrite=True)
     assert overwritten == cloned_path
