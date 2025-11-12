@@ -1,0 +1,5 @@
+device,name,address,dtype,scale,offset,unit,rw,function,description
+RTUINV1_1,INV1_ED,0,INT16,0.001,0,kWh,R,IR,Energy daily
+RTUINV1_2,INV1_ET,2,INT32R,0.001,0,kWh,R,IR,Energy total (reversed words)
+RTUINV1_3,INV1_TEMP,4,INT16,0.1,0,°C,R,IR,Inverter temperature
+RTUINV1_4,INV1_ALARM,5,INT16,1,0,-,R,IR,Alarm code

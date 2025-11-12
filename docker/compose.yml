@@ -1,0 +1,6 @@
+services:
+  modbus-map-maker:
+    build: .
+    command: ["generate", "examples/mapping.csv", "--out", "build"]
+    volumes:
+      - ./:/app

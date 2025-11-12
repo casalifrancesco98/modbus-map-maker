@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "modbus-map-maker"
+version = "0.1.0"
+description = "Generate Modbus mapping from CSV/Excel to JSON/YAML and code emitters (Python/C/PLC)."
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [{name="Francesco Casali", email="francesco.casali.98@gmail.com"}]
+keywords = ["modbus", "mapping", "industrial", "iot", "automation", "energy"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "pandas>=2.1",
+    "pydantic>=2.6",
+    "typer>=0.12",
+    "jinja2>=3.1",
+    "pyyaml>=6.0",
+    "openpyxl>=3.1"
+]
+
+[project.scripts]
+modbus-map-maker = "modbus_map_maker.cli:app"
+
+[tool.hatch.build]
+include = ["src/modbus_map_maker/**", "examples/**", "README.md", "LICENSE"]
