@@ -31,7 +31,7 @@ modbus-map-maker = "modbus_map_maker.cli:app"
 
 # DICHIARA IL PACKAGE per hatchling (QUI STA LA FIX)
 [tool.hatch.build.targets.wheel]
-packages = [{ include = "modbus_map_maker", from = "src" }]
+packages = ["src/modbus_map_maker"]
 
 [tool.hatch.build.targets.sdist]
 include = [

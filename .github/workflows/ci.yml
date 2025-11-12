@@ -17,7 +17,7 @@ jobs:
       - name: Upgrade pip & build backend
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          python -m pip install --upgrade hatchling
+          python -m pip install --upgrade "hatchling>=1.25"
 
       - name: Install project + test deps
         run: |
@@ -26,5 +26,5 @@ jobs:
 
       - name: Run tests
         env:
-          PYTHONPATH: src   # cintura e bretelle
+          PYTHONPATH: src
         run: pytest -q
