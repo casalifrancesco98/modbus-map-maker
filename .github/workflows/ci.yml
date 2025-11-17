@@ -8,6 +8,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -22,17 +24,8 @@ jobs:
         run: |
           pytest -q --cov=src/modbus_map_maker --cov-report=xml
       - name: Upload coverage to Codecov
-        if: |
-          (
-            github.event_name != 'pull_request' ||
-            github.event.pull_request.head.repo.full_name == github.repository
-          ) && (
-            github.event.repository.private == false ||
-            secrets.CODECOV_TOKEN != ''
-          )
+        if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && (github.event.repository.private == false || env.CODECOV_TOKEN != '') }}
         uses: codecov/codecov-action@v4
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
           files: ./coverage.xml
           fail_ci_if_error: true
